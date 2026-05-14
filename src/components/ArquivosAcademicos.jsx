@@ -1,22 +1,7 @@
+import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/ArquivosAcademicos.css';
-
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2);
-}
-
-function formatFileSize(bytes) {
-  if (!bytes) return '';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  let size = bytes;
-  let unitIndex = 0;
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024;
-    unitIndex++;
-  }
-  return `${size.toFixed(1)} ${units[unitIndex]}`;
-}
 
 function getFileIcon(file) {
   if (!file) return '📄';
@@ -31,173 +16,213 @@ function getFileIcon(file) {
 
 function ArquivosAcademicos() {
   const navigate = useNavigate();
+  const [inputKey, setInputKey] = useState(0);
   const [activeTab, setActiveTab] = useState('meus');
   const [searchTerm, setSearchTerm] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState('todos');
   const [selectedFormation, setSelectedFormation] = useState('');
+  const [meusRepositorios, setMeusRepositorios] = useState([]);
+  const [repositoriosTurma, setRepositoriosTurma] = useState([]);
+  const API_URL = "http://localhost:3000/repositorios";
+  const MY_REPOS_URL = "http://localhost:3000/repositorios/meus-repositorios";
+  const TURMA_REPOS_URL = "http://localhost:3000/repositorios/repositorios-turma";
+  const token = localStorage.getItem("token");
 
   const user = {
-    nome: 'Emerson Carlos',
-    matricula: '01131724',
+    nome: '',
+    matricula: '',
   };
 
-  const [formations, setFormations] = useState([]);
-  const [showFormationModal, setShowFormationModal] = useState(false);
-  const [newFormationName, setNewFormationName] = useState('');
-  const [repositorios, setRepositorios] = useState([]);
+  const formations = [
+    { id: 'Análise e Desenvolvimento de Sistemas', name: 'Análise e Desenvolvimento de Sistemas' },
+    { id: 'Ciência da Computação', name: 'Ciência da Computação' }
+  ];
+
+  const periodos = ['2025.1', '2025.2', '2026.1', '2026.2', '2027.1', '2027.2'];
+  const disciplinas = [
+    'Algoritmos e Programação',
+    'Banco de Dados',
+    'Engenharia de Software',
+    'Estrutura de Dados',
+    'Desenvolvimento Web',
+    'Inteligência Artificial'
+  ];
+
   const [form, setForm] = useState({
-    titulo: '',
-    descricao: '',
-    visibilidade: 'privado',
-    formationId: '',
-    arquivo: null,
+    title: '',
+    description: '',
+    visibility: 'privado',
+    course: '',
+    semester: '2025.2',
+    subject: 'Algoritmos e Programação',
     arquivoFile: null,
   });
 
+  // Busca repositórios da turma
   useEffect(() => {
-    const storedRepos = localStorage.getItem('repositorios');
-    if (storedRepos) setRepositorios(JSON.parse(storedRepos));
-    const storedFormations = localStorage.getItem('formacoes');
-    if (storedFormations) {
-      setFormations(JSON.parse(storedFormations));
-    } else {
-      const defaultFormations = [
-        { id: generateId(), name: 'ADS' },
-        { id: generateId(), name: 'Ciência da Computação' },
-      ];
-      setFormations(defaultFormations);
-      localStorage.setItem('formacoes', JSON.stringify(defaultFormations));
-    }
-  }, []);
+    const fetchRepositoriosTurma = async () => {
+      try {
+        const res = await axios.get(TURMA_REPOS_URL, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setRepositoriosTurma(res.data);
+      } catch (err) {
+        console.log(err);
+        alert("Erro ao carregar repositórios da turma");
+      }
+    };
+    fetchRepositoriosTurma();
+  }, [token]);
 
+  // Busca meus repositórios
   useEffect(() => {
-    localStorage.setItem('repositorios', JSON.stringify(repositorios));
-  }, [repositorios]);
-
-  useEffect(() => {
-    localStorage.setItem('formacoes', JSON.stringify(formations));
-  }, [formations]);
+    const fetchRepositorios = async () => {
+      try {
+        const res = await axios.get(MY_REPOS_URL, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setMeusRepositorios(res.data);
+      } catch (err) {
+        console.log(err);
+        alert("Erro ao carregar repositórios");
+      }
+    };
+    fetchRepositorios();
+  }, [token]);
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) {
-      setForm({ ...form, arquivo: null, arquivoFile: null });
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Arquivo muito grande. Máximo de 5MB.');
-      e.target.value = '';
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setForm({
-        ...form,
-        arquivo: {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          dataURL: ev.target.result,
-        },
-        arquivoFile: file,
-      });
-    };
-    reader.readAsDataURL(file);
-  };
+  const file = e.target.files?.[0];
 
-  const handleSubmit = (e) => {
+  // Se o usuário cancelou a seleção (nenhum arquivo), reseta o input
+  if (!file) {
+    e.target.value = '';    // <--- solução principal
+    setForm(prev => ({ ...prev, arquivoFile: null }));
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Arquivo muito grande. Máximo de 5MB.");
+    e.target.value = '';    // limpa o campo mesmo em caso de erro
+    setForm(prev => ({ ...prev, arquivoFile: null }));
+    return;
+  }
+
+  setForm(prev => ({ ...prev, arquivoFile: file }));
+};
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.titulo.trim() || !form.formationId) {
-      alert('Preencha o título e selecione uma formação.');
+
+    if (!form.title.trim() || !form.course) {
+      alert("Preencha o título e selecione uma formação.");
       return;
     }
 
-    const novo = {
-      id: generateId(),
-      userId: user.matricula,
-      userName: user.nome,
-      formationId: form.formationId,
-      titulo: form.titulo,
-      descricao: form.descricao,
-      visibilidade: form.visibilidade,
-      status: 'pending',          // aguardando aprovação do coordenador
-      createdAt: new Date().toISOString(),
-      arquivo: form.arquivo || null,
-    };
-    setRepositorios([novo, ...repositorios]);
-    setForm({
-      titulo: '',
-      descricao: '',
-      visibilidade: 'privado',
-      formationId: '',
-      arquivo: null,
-      arquivoFile: null,
-    });
-    document.getElementById('file-input').value = '';
-    alert('Repositório enviado para aprovação do coordenador.');
+    try {
+      const formData = new FormData();
+      formData.append("title", form.title);
+      formData.append("description", form.description);
+      formData.append("course", form.course);
+      formData.append("semester", form.semester);
+      formData.append("subject", form.subject);
+      formData.append("visibility", form.visibility);
+      if (form.arquivoFile) {
+        formData.append("file", form.arquivoFile);
+      }
+
+      await axios.post(API_URL, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        }
+      });
+
+      alert("Repositório enviado com sucesso!");
+
+      // Recarrega a lista de meus repositórios
+      const res = await axios.get(MY_REPOS_URL, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMeusRepositorios(res.data);
+
+      // Limpa o formulário
+      setForm({
+        title: "",
+        description: "",
+        visibility: "privado",
+        course: "",
+        semester: "2025.2",
+        subject: "Algoritmos e Programação",
+        arquivoFile: null,
+      });
+
+      // Reseta o input file (força recriação do elemento)
+      setInputKey(prev => prev + 1);
+
+    } catch (err) {
+      console.log(err);
+      alert("Erro ao enviar repositório");
+    }
   };
 
-  const addFormation = () => {
-    if (!newFormationName.trim()) return;
-    const newFormation = {
-      id: generateId(),
-      name: newFormationName.trim(),
-    };
-    setFormations([...formations, newFormation]);
-    setNewFormationName('');
-    setShowFormationModal(false);
+  const deleteRepositorio = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3000/repositorios/meus-repositorios/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMeusRepositorios(prev => prev.filter(repo => repo.id !== id));
+    } catch (err) {
+      console.log(err);
+      alert("Erro ao deletar");
+    }
   };
 
-  const toggleVisibilidade = (id) => {
-    setRepositorios(prev =>
-      prev.map(repo =>
-        repo.id === id
-          ? { ...repo, visibilidade: repo.visibilidade === 'publico' ? 'privado' : 'publico' }
-          : repo
-      )
-    );
-  };
-
-  const deleteRepositorio = (id) => {
-    setRepositorios(prev => prev.filter(repo => repo.id !== id));
+  // Função para baixar o arquivo
+  const downloadFile = (fileUrl, fileName) => {
+    const link = document.createElement('a');
+    link.href = `http://localhost:3000${fileUrl}`;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Filtros para meus repositórios
-  let meusRepos = repositorios.filter(repo => repo.userId === user.matricula);
+  let meusRepos = meusRepositorios;
   if (visibilityFilter !== 'todos') {
-    meusRepos = meusRepos.filter(repo => repo.visibilidade === visibilityFilter);
+    meusRepos = meusRepos.filter(repo => repo.visibility === visibilityFilter);
   }
   if (selectedFormation) {
-    meusRepos = meusRepos.filter(repo => repo.formationId === selectedFormation);
+    meusRepos = meusRepos.filter(repo => repo.course === selectedFormation);
   }
   if (searchTerm) {
     const term = searchTerm.toLowerCase();
     meusRepos = meusRepos.filter(repo =>
-      repo.titulo.toLowerCase().includes(term) ||
-      repo.descricao.toLowerCase().includes(term)
+      repo.title.toLowerCase().includes(term) ||
+      (repo.description && repo.description.toLowerCase().includes(term)) ||
+      (repo.subject && repo.subject.toLowerCase().includes(term))
     );
   }
 
-  // Repositórios públicos de outras turmas: só os aprovados
-  let outrosReposPublicos = repositorios.filter(
+  // Filtros para repositórios da turma
+  let outrosReposPublicos = repositoriosTurma.filter(
     repo => repo.userId !== user.matricula
-      && repo.visibilidade === 'publico'
-      && repo.status === 'approved'
   );
   if (selectedFormation) {
-    outrosReposPublicos = outrosReposPublicos.filter(repo => repo.formationId === selectedFormation);
+    outrosReposPublicos = outrosReposPublicos.filter(repo => repo.course === selectedFormation);
   }
   if (searchTerm) {
     const term = searchTerm.toLowerCase();
     outrosReposPublicos = outrosReposPublicos.filter(repo =>
-      repo.titulo.toLowerCase().includes(term) ||
-      repo.descricao.toLowerCase().includes(term) ||
-      repo.userName.toLowerCase().includes(term)
+      (repo.title || '').toLowerCase().includes(term) ||
+      (repo.description || '').toLowerCase().includes(term) ||
+      (repo.userName || '').toLowerCase().includes(term) ||
+      (repo.subject || '').toLowerCase().includes(term)
     );
   }
 
-  const getFormationName = (formationId) => {
-    const formation = formations.find(f => f.id === formationId);
+  const getFormationName = (course) => {
+    const formation = formations.find(f => f.id === course);
     return formation ? formation.name : 'Formação não especificada';
   };
 
@@ -211,6 +236,7 @@ function ArquivosAcademicos() {
   return (
     <div className="arquivos-fullscreen">
       <div className="arquivos-container">
+
         <header className="arquivos-header">
           <button className="back-button" onClick={() => navigate('/dashboard')}>
             ← Voltar ao Dashboard
@@ -237,18 +263,13 @@ function ArquivosAcademicos() {
                 ))}
               </select>
             </div>
-            <div className="hamburger-menu">
-              <button className="hamburger-btn" onClick={() => setShowFormationModal(true)}>
-                ☰ Gerenciar formações
-              </button>
-            </div>
           </div>
         </div>
 
         <div className="search-bar">
           <input
             type="text"
-            placeholder="Buscar por título, descrição ou autor..."
+            placeholder="Buscar por título, disciplina, descrição ou autor..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -259,59 +280,54 @@ function ArquivosAcademicos() {
             <div className="upload-card">
               <form className="upload-form" onSubmit={handleSubmit}>
                 <h3>Criar novo repositório (aguarda aprovação)</h3>
-                <input
-                  type="text"
-                  placeholder="Título"
-                  value={form.titulo}
-                  onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-                  required
-                />
-                <textarea
-                  placeholder="Descrição (opcional)"
-                  value={form.descricao}
-                  onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-                />
+                <input type="text" placeholder="Título" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+                <textarea placeholder="Descrição (opcional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+
                 <div className="form-row">
-                  <select
-                    value={form.formationId}
-                    onChange={(e) => setForm({ ...form, formationId: e.target.value })}
-                    required
-                  >
+                  <select value={form.course} onChange={(e) => setForm({ ...form, course: e.target.value })} required>
                     <option value="">Selecione uma formação</option>
                     {formations.map(formation => (
                       <option key={formation.id} value={formation.id}>{formation.name}</option>
                     ))}
                   </select>
                 </div>
+
+                <div className="form-row">
+                  <select value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })}>
+                    {periodos.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  <select value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })}>
+                    {disciplinas.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+
                 <div className="visibilidade-select">
                   <label>
-                    <input
-                      type="radio"
-                      value="privado"
-                      checked={form.visibilidade === 'privado'}
-                      onChange={() => setForm({ ...form, visibilidade: 'privado' })}
-                    />
+                    <input type="radio" value="privado" checked={form.visibility === 'privado'} onChange={() => setForm({ ...form, visibility: 'privado' })} />
                     Privado (só você vê)
                   </label>
                   <label>
-                    <input
-                      type="radio"
-                      value="publico"
-                      checked={form.visibilidade === 'publico'}
-                      onChange={() => setForm({ ...form, visibilidade: 'publico' })}
-                    />
+                    <input type="radio" value="publico" checked={form.visibility === 'publico'} onChange={() => setForm({ ...form, visibility: 'publico' })} />
                     Público (aparecerá após aprovação)
                   </label>
                 </div>
+
                 <div className="file-input-group">
-                  <label htmlFor="file-input" className="file-label">
-                    📎 Anexar arquivo (máx. 5MB)
+                  <label htmlFor={`file-input-${inputKey}`} className="file-label">
+                    📎 Selecionar arquivo (máx. 5MB)
                   </label>
-                  <input type="file" id="file-input" onChange={handleFileChange} />
-                  {form.arquivo && (
-                    <div className="file-info">
-                      {getFileIcon(form.arquivo)} {form.arquivo.name} ({formatFileSize(form.arquivo.size)})
-                    </div>
+                  <input
+                    key={inputKey}
+                    id={`file-input-${inputKey}`}
+                    type="file"
+                    accept=".zip,.rar,.pdf,.doc,.docx"
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
+                  {form.arquivoFile && (
+                    <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#28a745' }}>
+                      ✓ {form.arquivoFile.name}
+                    </p>
                   )}
                 </div>
                 <button type="submit" className="btn-submit">Enviar para aprovação</button>
@@ -320,72 +336,63 @@ function ArquivosAcademicos() {
 
             <div className="filters">
               <div className="filter-buttons">
-                <button
-                  className={visibilityFilter === 'todos' ? 'filter-active' : ''}
-                  onClick={() => setVisibilityFilter('todos')}
-                >
-                  Todos
-                </button>
-                <button
-                  className={visibilityFilter === 'publico' ? 'filter-active' : ''}
-                  onClick={() => setVisibilityFilter('publico')}
-                >
-                  🌍 Públicos
-                </button>
-                <button
-                  className={visibilityFilter === 'privado' ? 'filter-active' : ''}
-                  onClick={() => setVisibilityFilter('privado')}
-                >
-                  🔒 Privados
-                </button>
+                <button className={visibilityFilter === 'todos' ? 'filter-active' : ''} onClick={() => setVisibilityFilter('todos')}>Todos</button>
+                <button className={visibilityFilter === 'publico' ? 'filter-active' : ''} onClick={() => setVisibilityFilter('publico')}>🌍 Públicos</button>
+                <button className={visibilityFilter === 'privado' ? 'filter-active' : ''} onClick={() => setVisibilityFilter('privado')}>🔒 Privados</button>
               </div>
             </div>
 
             <div className="repos-grid">
               {meusRepos.length === 0 ? (
-                <div className="empty-message">
-                  <p>Nenhum repositório encontrado.</p>
-                </div>
+                <div className="empty-message"><p>Nenhum repositório encontrado.</p></div>
               ) : (
                 meusRepos.map(repo => (
                   <div key={repo.id} className="repo-card">
                     <div className="repo-header">
-                      <h3>{repo.titulo}</h3>
+                      <h3>{repo.title}</h3>
                       <div className="badges">
-                        <span className={`visibility-badge ${repo.visibilidade}`}>
-                          {repo.visibilidade === 'publico' ? '🌍 Público' : '🔒 Privado'}
+                        <span className={`visibility-badge ${repo.visibility}`}>
+                          {repo.visibility === 'publico' ? '🌍 Público' : '🔒 Privado'}
                         </span>
                         {getStatusBadge(repo.status)}
                       </div>
                     </div>
-                    <p className="repo-description">{repo.descricao || 'Sem descrição'}</p>
+
+                    <p className="repo-description">{repo.description || 'Sem descrição'}</p>
+
                     <div className="repo-meta">
-                      <small>Formação: {getFormationName(repo.formationId)}</small><br />
-                      <small>Criado em: {new Date(repo.createdAt).toLocaleDateString()}</small>
+                      <small>Formação: {getFormationName(repo.course)}</small><br />
+                      {repo.semester && <><small>Período: {repo.semester}</small><br /></>}
+                      {repo.subject && <><small>Disciplina: {repo.subject}</small><br /></>}
+                      <small>Criado em: {new Date(repo.created_at).toLocaleDateString()}</small>
                     </div>
-                    {repo.arquivo && (
+
+                    {repo.file_url && (
                       <div className="repo-attachment">
-                        <a
-                          href={repo.arquivo.dataURL}
-                          download={repo.arquivo.name}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="file-link"
-                        >
-                          {getFileIcon(repo.arquivo)} {repo.arquivo.name}
-                          <span className="file-size">({formatFileSize(repo.arquivo.size)})</span>
-                        </a>
+                        <div className="file-info-with-download">
+                          {/* Link que abre em nova aba */}
+                          <a
+                            href={`http://localhost:3000${repo.file_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="file-link"
+                          >
+                            {getFileIcon({ name: repo.file_url.split('/').pop() })} {repo.file_url.split('/').pop()}
+                          </a>
+                          {/* Botão de download */}
+                          <button
+                            onClick={() => downloadFile(repo.file_url, repo.file_url.split('/').pop())}
+                            className="btn-download"
+                            title="Baixar arquivo"
+                          >
+                            ⬇️ Baixar
+                          </button>
+                        </div>
                       </div>
                     )}
+
                     <div className="repo-actions">
-                      {repo.status === 'approved' && (
-                        <button onClick={() => toggleVisibilidade(repo.id)} className="btn-toggle">
-                          {repo.visibilidade === 'publico' ? 'Tornar Privado' : 'Tornar Público'}
-                        </button>
-                      )}
-                      <button onClick={() => deleteRepositorio(repo.id)} className="btn-delete">
-                        Excluir
-                      </button>
+                      <button onClick={() => deleteRepositorio(repo.id)} className="btn-delete">Excluir</button>
                     </div>
                   </div>
                 ))
@@ -398,34 +405,41 @@ function ArquivosAcademicos() {
           <div className="tab-content">
             <div className="repos-grid">
               {outrosReposPublicos.length === 0 ? (
-                <div className="empty-message">
-                  <p>Nenhum repositório público aprovado disponível para esta formação.</p>
-                </div>
+                <div className="empty-message"><p>Nenhum repositório público aprovado disponível.</p></div>
               ) : (
                 outrosReposPublicos.map(repo => (
                   <div key={repo.id} className="repo-card">
                     <div className="repo-header">
-                      <h3>{repo.titulo}</h3>
+                      <h3>{repo.title}</h3>
                       <span className="visibility-badge publico">🌍 Público</span>
                     </div>
-                    <p className="repo-description">{repo.descricao || 'Sem descrição'}</p>
+                    <p className="repo-description">{repo.description || 'Sem descrição'}</p>
                     <div className="repo-meta">
-                      <small>Autor: {repo.userName}</small><br />
-                      <small>Formação: {getFormationName(repo.formationId)}</small><br />
-                      <small>Criado em: {new Date(repo.createdAt).toLocaleDateString()}</small>
+                      <small>Aluno: {repo.userName}</small><br />
+                      <small>Formação: {getFormationName(repo.course)}</small><br />
+                      {repo.semester && <><small>Período: {repo.semester}</small><br /></>}
+                      {repo.subject && <><small>Disciplina: {repo.subject}</small><br /></>}
+                      <small>Criado em: {new Date(repo.created_at).toLocaleDateString()}</small>
                     </div>
-                    {repo.arquivo && (
+                    {repo.file_url && (
                       <div className="repo-attachment">
-                        <a
-                          href={repo.arquivo.dataURL}
-                          download={repo.arquivo.name}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="file-link"
-                        >
-                          {getFileIcon(repo.arquivo)} {repo.arquivo.name}
-                          <span className="file-size">({formatFileSize(repo.arquivo.size)})</span>
-                        </a>
+                        <div className="file-info-with-download">
+                          <a
+                            href={`http://localhost:3000${repo.file_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="file-link"
+                          >
+                            {getFileIcon({ name: repo.file_url.split('/').pop() })} {repo.file_url.split('/').pop()}
+                          </a>
+                          <button
+                            onClick={() => downloadFile(repo.file_url, repo.file_url.split('/').pop())}
+                            className="btn-download"
+                            title="Baixar arquivo"
+                          >
+                            ⬇️ Baixar
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -434,42 +448,8 @@ function ArquivosAcademicos() {
             </div>
           </div>
         )}
-      </div>
 
-      {/* Modal para adicionar nova formação */}
-      {showFormationModal && (
-        <div className="modal-overlay" onClick={() => setShowFormationModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Gerenciar formações</h3>
-            <div className="formation-list">
-              {formations.map(formation => (
-                <div key={formation.id} className="formation-item">
-                  <span>{formation.name}</span>
-                  <button
-                    onClick={() => {
-                      setFormations(formations.filter(f => f.id !== formation.id));
-                      if (selectedFormation === formation.id) setSelectedFormation('');
-                    }}
-                    className="remove-formation"
-                  >
-                    ❌
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="add-formation">
-              <input
-                type="text"
-                placeholder="Nome da nova formação"
-                value={newFormationName}
-                onChange={(e) => setNewFormationName(e.target.value)}
-              />
-              <button onClick={addFormation}>Adicionar</button>
-            </div>
-            <button className="close-modal" onClick={() => setShowFormationModal(false)}>Fechar</button>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

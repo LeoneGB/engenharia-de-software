@@ -43,7 +43,7 @@ function Dashboard() {
           <a href="#">SOLICITAÇÕES</a>
           <a href="#">BIBLIOTECA</a>
           <a href="#">LINKS ÚTEIS</a>
-          <Link to="/arquivos-academicos">ARQUIVOS ACADÊMICOS</Link>
+          <Link to="/repositorios">ARQUIVOS ACADÊMICOS</Link>
         </nav>
 
         {/* Menu do usuário */}

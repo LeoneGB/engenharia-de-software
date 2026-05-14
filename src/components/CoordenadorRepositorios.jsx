@@ -1,3 +1,4 @@
+import axios from "axios"
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/CoordenadorRepositorios.css';
@@ -6,18 +7,80 @@ function CoordenadorRepositorios() {
   const navigate = useNavigate();
   const [repositorios, setRepositorios] = useState([]);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('repositorios');
-    if (stored) setRepositorios(JSON.parse(stored));
-  }, []);
+  const token = localStorage.getItem("token");
 
-  const updateStatus = (id, newStatus) => {
-    const updated = repositorios.map(repo =>
-      repo.id === id ? { ...repo, status: newStatus } : repo
+  useEffect(() => {
+  fetchPendentes();
+}, []);
+
+const fetchPendentes = async () => {
+  try {
+    const res = await axios.get(
+      "http://localhost:3000/repositorios/pendentes",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
     );
-    setRepositorios(updated);
-    localStorage.setItem('repositorios', JSON.stringify(updated));
-  };
+
+    setRepositorios(res.data);
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+  const approveRepository = async (id) => {
+
+  try {
+
+    await axios.patch(
+      `http://localhost:3000/repositorios/pendente/${id}/approve`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    setRepositorios(prev =>
+      prev.filter(repo => repo.id !== id)
+    );
+
+  } catch (err) {
+
+    console.log(err);
+
+    alert("Erro ao aprovar");
+  }
+};
+
+const rejectRepository = async (id) => {
+
+  try {
+
+    await axios.delete(
+      `http://localhost:3000/repositorios/pendente/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    setRepositorios(prev =>
+      prev.filter(repo => repo.id !== id)
+    );
+
+  } catch (err) {
+
+    console.log(err);
+
+    alert("Erro ao rejeitar");
+  }
+};
 
   const pendentes = repositorios.filter(repo => repo.status === 'pending');
 
@@ -41,20 +104,60 @@ function CoordenadorRepositorios() {
           pendentes.map(repo => (
             <div key={repo.id} className="repo-card">
               <div className="repo-info">
-                <h3>{repo.titulo}</h3>
-                <p>{repo.descricao || 'Sem descrição'}</p>
-                <p><strong>Aluno:</strong> {repo.userName}</p>
-                <p><strong>Formação:</strong> {repo.formationId} (consulte lista de formações)</p>
-                <p><strong>Visibilidade solicitada:</strong> {repo.visibilidade === 'publico' ? '🌍 Público' : '🔒 Privado'}</p>
-                {repo.arquivo && (
-                  <a href={repo.arquivo.dataURL} download={repo.arquivo.name} target="_blank" rel="noopener noreferrer">
-                    📄 {repo.arquivo.name}
+                <h3>{repo.title}</h3>
+
+                <p>{repo.description || 'Sem descrição'}</p>
+
+                <p>
+                  <strong>Aluno:</strong> {repo.student_name}
+                </p>
+
+                <p>
+                  <strong>Matricula:</strong> {repo.student_matricula}
+                </p>
+
+                <p>
+                  <strong>Formação:</strong> {repo.course}
+                </p>
+
+                <p>
+                  <strong>Disciplina:</strong> {repo.subject}
+                </p>
+
+                <p>
+                  <strong>Período:</strong> {repo.semester}
+                </p>
+
+                <p>
+                  <strong>Visibilidade:</strong>{" "}
+                  {repo.visibility === 'publico'
+                    ? '🌍 Público'
+                    : '🔒 Privado'}
+                </p>
+
+                {repo.file_url && (
+                  <a
+                    href={repo.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    📄 Abrir Arquivo
                   </a>
                 )}
               </div>
               <div className="repo-actions">
-                <button className="btn-approve" onClick={() => updateStatus(repo.id, 'approved')}>✅ Aprovar</button>
-                <button className="btn-reject" onClick={() => updateStatus(repo.id, 'rejected')}>❌ Rejeitar</button>
+                <button
+                  className="btn-approve"
+                  onClick={() => approveRepository(repo.id)}
+                >
+                   Aprovar
+                </button>
+                <button
+                  className="btn-reject"
+                  onClick={() => rejectRepository(repo.id)}
+                >
+                   Rejeitar
+                </button>
               </div>
             </div>
           ))

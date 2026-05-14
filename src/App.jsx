@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Login from './components/Login';
-import Dashboard from './components/dashboard';
+import Dashboard from './components/Dashboard';
 import ArquivosAcademicos from './components/ArquivosAcademicos';
 import CoordenadorLogin from './components/CoordenadorLogin';
 import CoordenadorRepositorios from './components/CoordenadorRepositorios';
@@ -11,7 +11,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/arquivos-academicos" element={<ArquivosAcademicos />} />
+        <Route path="/repositorios" element={<ArquivosAcademicos />} />
         <Route path="/coordenador-login" element={<CoordenadorLogin />} />
          <Route path="/coordinator" element={<CoordenadorRepositorios />} />
       </Routes>
