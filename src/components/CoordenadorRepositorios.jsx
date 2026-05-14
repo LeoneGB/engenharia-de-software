@@ -1,4 +1,4 @@
-import axios from "axios"
+import api, { apiFileUrl } from "../api"
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/CoordenadorRepositorios.css';
@@ -15,8 +15,8 @@ function CoordenadorRepositorios() {
 
 const fetchPendentes = async () => {
   try {
-    const res = await axios.get(
-      "http://localhost:3000/repositorios/pendentes",
+    const res = await api.get(
+      "/repositorios/pendentes",
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -35,8 +35,8 @@ const fetchPendentes = async () => {
 
   try {
 
-    await axios.patch(
-      `http://localhost:3000/repositorios/pendente/${id}/approve`,
+    await api.patch(
+      `/repositorios/pendente/${id}/approve`,
       {},
       {
         headers: {
@@ -61,8 +61,8 @@ const rejectRepository = async (id) => {
 
   try {
 
-    await axios.delete(
-      `http://localhost:3000/repositorios/pendente/${id}`,
+    await api.delete(
+      `/repositorios/pendente/${id}`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -137,7 +137,7 @@ const rejectRepository = async (id) => {
 
                 {repo.file_url && (
                   <a
-                    href={repo.file_url}
+                    href={apiFileUrl(repo.file_url)}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

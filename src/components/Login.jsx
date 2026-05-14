@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';  // ← apenas uma chave de fechamento
 import aprendizagemImg from '../assets/aprendizagem.png';
 import serLogo from '../assets/ser-logo.png';
-import axios from "axios";
+import api from "../api";
 
 function Login() {
   const navigate = useNavigate();
@@ -21,8 +21,8 @@ function Login() {
   }
 
   try {
-    const response = await axios.post(
-      "http://localhost:3000/login",
+    const response = await api.post(
+      "/login",
       {
         matricula,
         password: senha

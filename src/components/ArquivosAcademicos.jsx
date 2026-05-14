@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api, { apiFileUrl } from '../api';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/ArquivosAcademicos.css';
@@ -23,9 +23,9 @@ function ArquivosAcademicos() {
   const [selectedFormation, setSelectedFormation] = useState('');
   const [meusRepositorios, setMeusRepositorios] = useState([]);
   const [repositoriosTurma, setRepositoriosTurma] = useState([]);
-  const API_URL = "http://localhost:3000/repositorios";
-  const MY_REPOS_URL = "http://localhost:3000/repositorios/meus-repositorios";
-  const TURMA_REPOS_URL = "http://localhost:3000/repositorios/repositorios-turma";
+  const API_URL = "/repositorios";
+  const MY_REPOS_URL = "/repositorios/meus-repositorios";
+  const TURMA_REPOS_URL = "/repositorios/repositorios-turma";
   const token = localStorage.getItem("token");
 
   const user = {
@@ -62,7 +62,7 @@ function ArquivosAcademicos() {
   useEffect(() => {
     const fetchRepositoriosTurma = async () => {
       try {
-        const res = await axios.get(TURMA_REPOS_URL, {
+        const res = await api.get(TURMA_REPOS_URL, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setRepositoriosTurma(res.data);
@@ -78,7 +78,7 @@ function ArquivosAcademicos() {
   useEffect(() => {
     const fetchRepositorios = async () => {
       try {
-        const res = await axios.get(MY_REPOS_URL, {
+        const res = await api.get(MY_REPOS_URL, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setMeusRepositorios(res.data);
@@ -130,7 +130,7 @@ function ArquivosAcademicos() {
         formData.append("file", form.arquivoFile);
       }
 
-      await axios.post(API_URL, formData, {
+      await api.post(API_URL, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data"
@@ -140,7 +140,7 @@ function ArquivosAcademicos() {
       alert("Repositório enviado com sucesso!");
 
       // Recarrega a lista de meus repositórios
-      const res = await axios.get(MY_REPOS_URL, {
+      const res = await api.get(MY_REPOS_URL, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMeusRepositorios(res.data);
@@ -167,7 +167,7 @@ function ArquivosAcademicos() {
 
   const deleteRepositorio = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/repositorios/meus-repositorios/${id}`, {
+      await api.delete(`/repositorios/meus-repositorios/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMeusRepositorios(prev => prev.filter(repo => repo.id !== id));
@@ -180,7 +180,7 @@ function ArquivosAcademicos() {
   // Função para baixar o arquivo
   const downloadFile = (fileUrl, fileName) => {
     const link = document.createElement('a');
-    link.href = `http://localhost:3000${fileUrl}`;
+    link.href = apiFileUrl(fileUrl);
     link.download = fileName;
     document.body.appendChild(link);
     link.click();
@@ -372,7 +372,7 @@ function ArquivosAcademicos() {
                         <div className="file-info-with-download">
                           {/* Link que abre em nova aba */}
                           <a
-                            href={`http://localhost:3000${repo.file_url}`}
+                            href={apiFileUrl(repo.file_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="file-link"
@@ -425,7 +425,7 @@ function ArquivosAcademicos() {
                       <div className="repo-attachment">
                         <div className="file-info-with-download">
                           <a
-                            href={`http://localhost:3000${repo.file_url}`}
+                            href={apiFileUrl(repo.file_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="file-link"

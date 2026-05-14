@@ -1,9 +1,12 @@
 import app from "./app.js";
 import { pool } from "./data/db.js";
 import express from "express";
+import cors from "cors"
 import path from "path";
 
 const PORT = process.env.PORT;
+
+app.use(cors());
 
 pool.connect()
   .then(() => {
