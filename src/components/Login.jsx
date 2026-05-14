@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';  // ← apenas uma chave de fechamento
-import aprendizagemImg from '../assets/aprendizagem.PNG';
+import { useNavigate } from 'react-router-dom';
+import aprendizagemImg from '../assets/aprendizagem.png';
 import serLogo from '../assets/ser-logo.png';
 import axios from "axios";
 

@@ -1,11 +1,9 @@
-/* ========== DASHBOARD - ESTILOS BASE ========== */
 .dashboard {
   min-height: 100vh;
   background: #f5f7fa;
   font-family: 'Inter', sans-serif;
 }
 
-/* Cabeçalho principal */
 .dashboard-header {
   background: white;
   padding: 1rem 2rem;
@@ -19,7 +17,6 @@
   position: relative;
 }
 
-/* Área da logo */
 .logo-area {
   display: flex;
   align-items: center;
@@ -39,7 +36,6 @@
   color: #146b9e;
 }
 
-/* Navegação principal */
 .dashboard-nav {
   display: flex;
   gap: 1.5rem;
@@ -58,7 +54,6 @@
   color: #146b9e;
 }
 
-/* Menu do usuário (dropdown) */
 .user-menu {
   position: relative;
   margin-left: auto;
@@ -148,14 +143,12 @@
   color: #146b9e;
 }
 
-/* Conteúdo principal */
 .dashboard-main {
   max-width: 1200px;
   margin: 2rem auto;
   padding: 0 2rem;
 }
 
-/* Card de boas-vindas */
 .welcome-card {
   background: white;
   border-radius: 1rem;
@@ -200,7 +193,6 @@
   background: #0f557f;
 }
 
-/* Períodos (semestres) */
 .periods {
   display: flex;
   gap: 1rem;
@@ -230,9 +222,6 @@
   border-color: #146b9e;
 }
 
-/* ========== RESPONSIVIDADE ========== */
-
-/* Tablets e smartphones médios (max-width: 1024px) */
 @media (max-width: 1024px) {
   .dashboard-header {
     flex-direction: column;
@@ -248,7 +237,6 @@
   }
 }
 
-/* Smartphones (max-width: 768px) */
 @media (max-width: 768px) {
   .dashboard-header {
     padding: 0.8rem;
@@ -321,7 +309,6 @@
   }
 }
 
-/* Smartphones pequenos (max-width: 480px) */
 @media (max-width: 480px) {
   .dashboard-header {
     padding: 0.6rem;
@@ -381,7 +368,6 @@
   }
 }
 
-/* Telas muito estreitas (max-width: 360px) */
 @media (max-width: 360px) {
   .dashboard-nav a {
     font-size: 0.65rem;

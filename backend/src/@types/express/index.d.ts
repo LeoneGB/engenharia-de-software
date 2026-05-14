@@ -8,7 +8,7 @@ declare global {
         type: string;
       };
 
-      file?: Express.Multer.File; // 🔥 adiciona isso
+      file?: Express.Multer.File;
     }
   }
 }

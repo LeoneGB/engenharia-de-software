@@ -1,4 +1,4 @@
-/* ========== COORDENADOR - ESTILOS BASE ========== */
+
 .coordenador-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -15,14 +15,13 @@
   flex-wrap: wrap;
 }
 
-/* ========== AJUSTE DOS BOTÕES DO HEADER ========== */
 .back-button,
 .logout-button {
-  background: #3182ce;         /* Cor azul principal */
-  color: #ffffff;              /* Cor da letra branca */
+  background: #3182ce;      
+  color: #ffffff;        
   border: none;
-  font-size: 0.85rem;          /* Diminui o tamanho do texto levemente */
-  padding: 0.4rem 0.85rem;     /* Reduz o espaçamento interno (altura e largura) */
+  font-size: 0.85rem;     
+  padding: 0.4rem 0.85rem;   
   border-radius: 2rem;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
@@ -32,19 +31,16 @@
   justify-content: center;
 }
 
-/* Deixa o botão de logout visualmente mais sutil ou com um limite de largura */
 .logout-button {
-  max-width: 80px;             /* Garante que o botão não estique horizontalmente */
-  font-weight: 500;            /* Deixa a leitura limpa mesmo menor */
+  max-width: 80px;          
+  font-weight: 500;         
 }
 
 .back-button:hover,
 .logout-button:hover {
-  background: #2b6cb0;         /* Azul um pouco mais escuro ao passar o mouse */
-  color: #ffffff;              /* Garante que a letra continue branca no hover */
+  color: #ffffff;           
 }
 
-/* Pequeno efeito ao clicar para dar feedback de clique */
 .logout-button:active {
   transform: scale(0.95);
 }
@@ -54,7 +50,7 @@
   text-align: center;
   font-size: 1.3rem;
   margin: 0;
-  order: 1; /* Garante ordem: Voltar, Título, Sair */
+  order: 1; 
 }
 
 .back-button {
@@ -65,7 +61,6 @@
   order: 2;
 }
 
-/* Responsividade: em telas pequenas, mantém os botões nas extremidades */
 @media (max-width: 768px) {
   .coordenador-container {
     padding: 1rem;
@@ -85,16 +80,15 @@
 
   .back-button {
     order: 0;
-    margin-right: auto; /* alinha à esquerda */
+    margin-right: auto; 
   }
 
   .logout-button {
     order: 2;
-    margin-left: auto; /* alinha à direita */
+    margin-left: auto; 
   }
 }
 
-/* Restante do CSS (cards, ações, etc.) permanece igual */
 .repo-card {
   background: white;
   border: 1px solid #e1e4e8;
@@ -165,7 +159,6 @@
   border-radius: 1rem;
 }
 
-/* Responsividade para os cards (já existente, mantido) */
 @media (max-width: 768px) {
   .repo-card {
     flex-direction: column;

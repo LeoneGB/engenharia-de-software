@@ -11,7 +11,6 @@ function Dashboard() {
   const dropdownRef = useRef(null)
   const navigate = useNavigate()
 
-  // Fecha o dropdown ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {

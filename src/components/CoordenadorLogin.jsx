@@ -9,7 +9,6 @@ function CoordenadorLogin() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // senha fixa para demonstração – em produção use autenticação real
     if (senha === 'admin123') {
       localStorage.setItem('coordinatorAuth', 'true');
       navigate('/coordenador');

@@ -58,7 +58,6 @@ function ArquivosAcademicos() {
     arquivoFile: null,
   });
 
-  // Busca repositórios da turma
   useEffect(() => {
     const fetchRepositoriosTurma = async () => {
       try {
@@ -74,7 +73,6 @@ function ArquivosAcademicos() {
     fetchRepositoriosTurma();
   }, [token]);
 
-  // Busca meus repositórios
   useEffect(() => {
     const fetchRepositorios = async () => {
       try {
@@ -93,16 +91,15 @@ function ArquivosAcademicos() {
   const handleFileChange = (e) => {
   const file = e.target.files?.[0];
 
-  // Se o usuário cancelou a seleção (nenhum arquivo), reseta o input
   if (!file) {
-    e.target.value = '';    // <--- solução principal
+    e.target.value = '';
     setForm(prev => ({ ...prev, arquivoFile: null }));
     return;
   }
 
   if (file.size > 5 * 1024 * 1024) {
     alert("Arquivo muito grande. Máximo de 5MB.");
-    e.target.value = '';    // limpa o campo mesmo em caso de erro
+    e.target.value = ''; 
     setForm(prev => ({ ...prev, arquivoFile: null }));
     return;
   }
@@ -139,13 +136,11 @@ function ArquivosAcademicos() {
 
       alert("Repositório enviado com sucesso!");
 
-      // Recarrega a lista de meus repositórios
       const res = await axios.get(MY_REPOS_URL, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMeusRepositorios(res.data);
 
-      // Limpa o formulário
       setForm({
         title: "",
         description: "",
@@ -156,7 +151,6 @@ function ArquivosAcademicos() {
         arquivoFile: null,
       });
 
-      // Reseta o input file (força recriação do elemento)
       setInputKey(prev => prev + 1);
 
     } catch (err) {
@@ -177,7 +171,6 @@ function ArquivosAcademicos() {
     }
   };
 
-  // Função para baixar o arquivo
   const downloadFile = (fileUrl, fileName) => {
     const link = document.createElement('a');
     link.href = `http://localhost:3000${fileUrl}`;
@@ -187,7 +180,6 @@ function ArquivosAcademicos() {
     document.body.removeChild(link);
   };
 
-  // Filtros para meus repositórios
   let meusRepos = meusRepositorios;
   if (visibilityFilter !== 'todos') {
     meusRepos = meusRepos.filter(repo => repo.visibility === visibilityFilter);
@@ -204,7 +196,6 @@ function ArquivosAcademicos() {
     );
   }
 
-  // Filtros para repositórios da turma
   let outrosReposPublicos = repositoriosTurma.filter(
     repo => repo.userId !== user.matricula
   );
