@@ -12,7 +12,6 @@ pool.connect()
   .then(() => {
     console.log("Banco conectado!");
 
-    // 🔥 ADICIONA ISSO AQUI
     app.use("/uploads", express.static("uploads"));
 
     app.listen(PORT, () => {
