@@ -73,7 +73,6 @@ function ArquivosAcademicos() {
     fetchRepositoriosTurma();
   }, [token]);
 
-  // Busca meus repositórios
   useEffect(() => {
     const fetchRepositorios = async () => {
       try {
