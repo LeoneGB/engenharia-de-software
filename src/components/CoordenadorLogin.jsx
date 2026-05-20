@@ -1,3 +1,5 @@
+//login de coordenador para teste localmente, descartado, pois está sendo usado o login real pelo supabase
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/CoordenadorLogin.css';
